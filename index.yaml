@@ -3,11 +3,11 @@ entries:
   hello-chart:
   - apiVersion: v1
     appVersion: "1.0"
-    created: 2022-08-18T14:06:05.550825584-07:00
+    created: "2022-08-18T14:10:35.170145-07:00"
     description: A Helm chart for Kubernetes
-    digest: b5affd3f0ef50ba2ba69da432a9ed5ccb6e3c8c751708b5b9a57df8f1132e2a0
+    digest: 4302752c696b865357bffa111aa3baba26e5c667eaa0e99ffaee3b79ea0b2875
     name: hello-chart
     urls:
     - https://raj-patel1.github.io/helm-test/hello-chart-0.1.0.tgz
     version: 0.1.0
-generated: 2022-08-18T14:06:05.550239342-07:00
+generated: "2022-08-18T14:10:35.169603-07:00"
