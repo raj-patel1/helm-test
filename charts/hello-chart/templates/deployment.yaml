@@ -1,0 +1,117 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.service.name }}
+  namespace: {{ .Values.service.name }}
+  labels:
+    app: {{ .Values.service.name }}
+{{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 4 }}
+{{- end }}
+spec:
+{{- if .Values.container.replicas }}
+  replicas: {{ .Values.container.replicas }}
+{{- else }}
+{{- if eq .Values.aws.account_name "beta" }}
+  replicas: 1
+{{- else if eq .Values.aws.account_name "gamma" }}
+  replicas: 2
+{{- else }}
+  replicas: 3
+{{- end }}
+{{- end }}
+  selector:
+    matchLabels:
+      app: {{ .Values.service.name }}
+{{- if .Values.labels }}
+{{ toYaml .Values.labels | indent 6 }}
+{{- end }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.service.name }}
+{{- if .Values.labels }}
+{{ toYaml .Values.app.labels | indent 8 }}
+{{- end }}
+    spec:
+      imagePullSecrets:
+      - name: regcred
+{{- if .Values.container.hostAliases }}
+      hostAliases:
+{{ toYaml .Values.container.hostAliases | indent 8 }}
+{{- end }}
+      dnsPolicy: None
+      dnsConfig:
+        nameservers:
+          - "192.168.64.10"
+      containers:
+        - name: {{ .Values.service.name }}
+          image: "{{ .Values.container.repository }}:{{ .Values.container.tag }}"
+          imagePullPolicy: Always
+{{- if .Values.container.volumeMounts }}
+          volumeMounts:
+{{ toYaml .Values.container.volumeMounts | indent 10 -}}
+{{- end }}
+          env:
+            - name: DD_AGENT_HOST
+              valueFrom:
+                fieldRef:
+                  fieldPath: status.hostIP
+{{- if .Values.container.env }}
+{{ toYaml .Values.container.env | indent 12 }}
+{{- end }}
+{{- if .Values.container.resources }}
+          resources:
+{{ toYaml .Values.container.resources | indent 12 }}
+{{- end }}
+      nodeSelector:
+        fleet: {{ .Values.service.appdomain }}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: fleet
+                operator: In
+                values:
+                  - {{ .Values.service.appdomain }}
+{{- if eq .Values.service.tenancy "single" }}
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+          - weight: 100
+            podAffinityTerm:
+              labelSelector:
+                matchExpressions:
+                - key: app
+                  operator: In
+                  values:
+                  - {{ .Values.service.name }}
+              topologyKey: kubernetes.io/hostname
+{{- end }}
+      tolerations:
+      - key: fleet
+        operator: Equal
+        value: {{ .Values.service.appdomain }}
+        effect: NoSchedule
+{{- if .Values.container.tolerations }}
+{{ toYaml . | indent 6 }}
+{{- end }}
+      volumes:
+      - name: tls
+        emptyDir: {}
+      - name: '{{ .Values.service.name }}-traefik-configuration'
+        configMap:
+          name: '{{ .Values.service.name }}-traefik-configuration'
+      - name: '{{ .Values.service.name }}-nginx-nginx-certs-configuration'
+        configMap:
+          name: '{{ .Values.service.name }}-nginx-certs-configuration'
+      - name: '{{ .Values.service.name }}-nginx-http-redirect-configuration'
+        configMap:
+          name: '{{ .Values.service.name }}-nginx-http-redirect-configuration'
+      - name: '{{ .Values.service.name }}-nginx-base-configuration'
+        configMap:
+          name: '{{ .Values.service.name }}-nginx-base-configuration'
+{{- if .Values.container.volumes }}
+{{ toYaml .Values.container.volumes | indent 6 }}
+{{- end }}
+

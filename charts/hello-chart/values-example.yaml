@@ -1,0 +1,21 @@
+aws:
+  account_name: beta
+  region: us-west-2
+  whitelist_cidr: 10.0.0.0/8
+service:
+  name: my-chart
+  type: api
+  appdomain: canaveral-services
+  proxy: nginx
+  tenancy: multi
+
+container:
+  repository: nginx
+  tag: 11
+  resources:
+    limits:
+      cpu: 100m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 256Mi

@@ -1,0 +1,3 @@
+server:
+  rotationThread: 1
+  senderThreads: 1
